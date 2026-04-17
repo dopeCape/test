@@ -52,7 +52,8 @@ export async function deleteNote(id: string): Promise<void> {
 }
 
 export async function getSettings(): Promise<Settings> {
-  return readJson<Settings>(SETTINGS_FILE, DEFAULT_SETTINGS);
+  const stored = await readJson<Partial<Settings>>(SETTINGS_FILE, {});
+  return { ...DEFAULT_SETTINGS, ...stored };
 }
 
 export async function saveSettings(settings: Settings): Promise<void> {

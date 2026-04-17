@@ -1,4 +1,4 @@
-import { Category, Note, Settings } from "./types";
+import { Category, CuratedItem, FeedEntry, Note, Settings } from "./types";
 
 function mulberry32(seed: number) {
   let a = seed >>> 0;
@@ -12,24 +12,37 @@ function mulberry32(seed: number) {
 }
 
 /**
- * Weighted shuffle: notes with higher `weight` are more likely to appear near
- * the top, so pinned reminders keep resurfacing but aren't the only thing shown.
+ * Weighted shuffle over a mixed pool of notes + curated items.
+ * Higher weight → likelier to appear near the top. We use the exponential
+ * trick: key = -log(U)/w, sort ascending.
  */
 export function buildFeed(
   notes: Note[],
+  curated: CuratedItem[],
   settings: Settings,
   seed = settings.shuffleSeed,
-): Note[] {
-  const enabled = new Set<Category>(settings.enabledCategories);
-  const pool = notes.filter((n) => enabled.has(n.category));
+): FeedEntry[] {
+  const enabledCats = new Set<Category>(settings.enabledCategories);
   const rand = mulberry32(seed);
 
+  const noteEntries: FeedEntry[] = notes
+    .filter((n) => enabledCats.has(n.category))
+    .map((n) => ({ kind: "note", note: n, weight: Math.max(0.1, n.weight || 1) }));
+
+  const curatedWeight = Math.max(0.1, settings.curatedWeight ?? 1);
+  const curatedEntries: FeedEntry[] = curated.map((c) => ({
+    kind: "curated",
+    item: c,
+    weight: curatedWeight,
+  }));
+
+  const pool = [...noteEntries, ...curatedEntries];
+
   return pool
-    .map((n) => {
-      const w = Math.max(0.1, n.weight || 1);
-      const key = -Math.log(rand() + 1e-9) / w;
-      return { n, key };
-    })
+    .map((entry) => ({
+      entry,
+      key: -Math.log(rand() + 1e-9) / entry.weight,
+    }))
     .sort((a, b) => a.key - b.key)
-    .map((x) => x.n);
+    .map((x) => x.entry);
 }
