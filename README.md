@@ -1,36 +1,60 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Learning Feed
 
-## Getting Started
+A scrollable, reel-style feed for your own notes and reminders — built to
+replace the Instagram/TikTok scroll with something productive. Single-user,
+password-gated, Next.js 14.
 
-First, run the development server:
+## What's in it
+
+- **Feed** — full-screen vertical snap-scroll. One card at a time. Mixes your
+  notes with curated tech content via a weighted shuffle, so high-priority
+  reminders resurface more often.
+- **Notes** — CRUD for notes with categories (`remind-me`, `tech`, `ai`,
+  `papers`, `code`, `idea`) and per-note weight.
+- **Curated sources** — pluggable external feeds, cached on disk:
+  - **arXiv** — recent CS papers (AI, ML, PL, SE, distributed systems, DB)
+  - **GitHub Trending** — repos gaining the most stars this week
+  - **npm** — active, high-quality JS/TS packages
+  - **Hacker News** — front-page tech stories
+- **Settings** — toggle note categories, toggle each source, tune the
+  note/curated balance, refresh sources on demand, log out.
+- **Auth** — single password gate. No usernames. HMAC-signed cookie session.
+
+## Setup
 
 ```bash
+npm install
+
+# 1. Hash your password
+node -e "console.log(require('crypto').createHash('sha256').update('YOUR_PASSWORD').digest('hex'))"
+
+# 2. Generate a session secret
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+
+# 3. Create .env.local with both values
+cp .env.example .env.local
+# edit .env.local
+
+# 4. (optional) seed with sample notes
+npm run seed
+
+# 5. Run
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Visit http://localhost:3000 — you'll be redirected to `/login`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Storage
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+Notes and settings live in `./data/*.json` (gitignored). For deployment on a
+read-only filesystem (e.g. Vercel), swap `src/lib/db.ts` for a persistent store
+(Turso, Neon, Upstash, etc.). On a VPS/Fly.io/Railway with a writable volume
+the JSON files work as-is.
 
-## Learn More
+## Stack
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+- Next.js 14 App Router, TypeScript
+- Tailwind CSS
+- CSS scroll-snap (no framer-motion dependency)
+- Node `crypto` + Web Crypto for password hashing and HMAC session cookie —
+  zero auth dependencies

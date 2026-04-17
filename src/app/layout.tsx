@@ -1,32 +1,29 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import Header from "@/components/common/Header";
-import AuthSessionProvider from "@/components/AuthSessionProvider";
-import { getServerSession } from "next-auth";
-import authOptions from "./api/auth/[...nextauth]/authOptions";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Spotify POC",
-  description: "A proof of concept for the Spotify API",
+  title: "Learning Feed",
+  description: "A scrollable reel-style feed for your notes and reminders.",
 };
 
-export default async function RootLayout({
+export const viewport: Viewport = {
+  themeColor: "#09090b",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+};
+
+export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
-  const session = await getServerSession(authOptions);
+}: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en">
-      <AuthSessionProvider session={session}>
-        <body className={inter.className}>
-          <Header />
-          {children}
-        </body>
-      </AuthSessionProvider>
+    <html lang="en" className="dark">
+      <body className={`${inter.className} bg-zinc-950 text-zinc-100`}>
+        {children}
+      </body>
     </html>
   );
 }
